@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from db.queries import get_db_connection
+from fastapi.encoders import jsonable_encoder
+from db.queries import get_db_connection, get_task1, get_task2
 from jwt import encode, decode
 import uvicorn
 
@@ -31,6 +32,33 @@ def generate_token(username: str, password: str):
     payload = {"username": username, "password": password}
     token = encode(payload, secret_key, algorithm="HS256")
     return token
+
+@app.get("/task1")
+def task1(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
+        payload = decode(token, secret_key, algorithms=["HS256"])
+        username = payload["username"]
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    results = get_task1()
+    return jsonable_encoder(results)
+
+
+@app.get("/task2")
+def task2(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    try:
+        token = credentials.credentials
+        secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
+        payload = decode(token, secret_key, algorithms=["HS256"])
+        username = payload["username"]
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    results = get_task2()
+    return jsonable_encoder(results)
 
 @app.post("/login")
 async def login(username: str, password: str):
@@ -71,6 +99,8 @@ async def insert_data(table_name: str, data: dict, credentials: HTTPAuthorizatio
     cur.execute(query, values)
     conn.commit()
     return {"message": f"{cur.rowcount} row(s) inserted into {table_name} table."}
+
+
 
 def main():
     print("Está escuchando")
