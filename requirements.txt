@@ -1,3 +1,11 @@
 pandas
 fastapi
 numpy
+sqlite3
+json
+fastapi
+pydantic
+asyncio
+uvicorn
+jwt
+pyjwt

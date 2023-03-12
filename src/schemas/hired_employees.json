@@ -1,0 +1,7 @@
+{
+    "id": "INTEGER PRIMARY KEY",
+    "name": "TEXT NOT NULL",
+    "datetime": "TEXT NOT NULL",
+    "department_id": "INTEGER NOT NULL",
+    "job_id": "INTEGER NOT NULL"
+}
