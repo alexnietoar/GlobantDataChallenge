@@ -19,7 +19,7 @@ def check_installed_libraries():
 
 check_installed_libraries()
 
-from api import main
+from main import main
 
 if __name__ == '__main__':
     main()

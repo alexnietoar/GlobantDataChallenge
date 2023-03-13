@@ -1,45 +1,18 @@
 from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.encoders import jsonable_encoder
 from db.queries import get_db_connection, get_task1, get_task2
-from jwt import encode, decode
+from .security.tokens import security, credential, generate_token, decode_token
+from src.schemas.data_types import api_data_types
 import uvicorn
 
 app = FastAPI()
 conn = get_db_connection()
-security = HTTPBearer()
-
-data_types = {
-    'hired_employees': {
-        'id': int,
-        'name': str,
-        'datetime': str,
-        'department_id': int,
-        'job_id': int
-    },
-    'departments': {
-        'id': int,
-        'department': str
-    },
-    'jobs': {
-        'id': int,
-        'job': str
-    }
-}
-
-def generate_token(username: str, password: str):
-    secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
-    payload = {"username": username, "password": password}
-    token = encode(payload, secret_key, algorithm="HS256")
-    return token
 
 @app.get("/task1")
-def task1(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def task1(credentials: credential = Depends(security)):
     try:
         token = credentials.credentials
-        secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
-        payload = decode(token, secret_key, algorithms=["HS256"])
-        username = payload["username"]
+        username = decode_token(token)
     except:
         raise HTTPException(status_code=401, detail="Invalid token")
     
@@ -48,12 +21,10 @@ def task1(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 
 @app.get("/task2")
-def task2(credentials: HTTPAuthorizationCredentials = Depends(security)):
+def task2(credentials: credential = Depends(security)):
     try:
         token = credentials.credentials
-        secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
-        payload = decode(token, secret_key, algorithms=["HS256"])
-        username = payload["username"]
+        username = decode_token(token)
     except:
         raise HTTPException(status_code=401, detail="Invalid token")
 
@@ -69,17 +40,15 @@ async def login(username: str, password: str):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
 @app.post("/insert/{table_name}")
-async def insert_data(table_name: str, data: dict, credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def insert_data(table_name: str, data: dict, credentials: credential = Depends(security)):
 
     try:
         token = credentials.credentials
-        secret_key = "1aBcD3fGhIjKlMnOpQrStUvWxYz"
-        payload = decode(token, secret_key, algorithms=["HS256"])
-        username = payload["username"]
+        username = decode_token(token)
     except:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    schema = data_types.get(table_name)
+    schema = api_data_types.get(table_name)
 
     if not schema:
         raise ValueError(f"Table {table_name} not found in data_types.")
@@ -100,8 +69,5 @@ async def insert_data(table_name: str, data: dict, credentials: HTTPAuthorizatio
     conn.commit()
     return {"message": f"{cur.rowcount} row(s) inserted into {table_name} table."}
 
-
-
-def main():
-    print("Está escuchando")
+def execute():
     uvicorn.run(app, host="0.0.0.0", port=8000)
